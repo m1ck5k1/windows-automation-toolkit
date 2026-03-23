@@ -1,0 +1,30 @@
+# Large binaries and ISOs
+win10_x64.iso
+ventoy.tar.gz
+incidium-remote-access.msi
+
+# Project-specific directories
+SnakeSpeareV6/
+drivers/
+logs/
+.env
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+target/
+build/
+dist/
+
+# Editor/IDE specific files
+.idea/
+.vscode/
+*.swp
+*.bak
+*~
+
+# Misc
+*.log
+_archive/
