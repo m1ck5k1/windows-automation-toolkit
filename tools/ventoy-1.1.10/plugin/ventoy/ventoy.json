@@ -1,0 +1,8 @@
+{
+    "auto_install": [
+        {
+            "iso": "/win10_x64.iso",
+            "autoinstall_file": "/unattend.xml"
+        }
+    ]
+}

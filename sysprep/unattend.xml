@@ -1,13 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <!-- 1. Windows PE Phase: Disk Configuration (Skipped - Image is already partitioned) -->
-    
-    <!-- 2. Specialize Phase: Generalize & Drivers -->
-    <settings pass="specialize">
+    <!-- 1. Windows PE Phase: Disk Configuration -->
+    <settings pass="windowsPE">
+        <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DiskConfiguration>
+                <Disk wcm:action="add">
+                    <CreatePartitions>
+                        <CreatePartition wcm:action="add">
+                            <Order>1</Order>
+                            <Type>Primary</Type>
+                            <Extend>true</Extend>
+                        </CreatePartition>
+                    </CreatePartitions>
+                    <ModifyPartitions>
+                        <ModifyPartition wcm:action="add">
+                            <Active>true</Active>
+                            <Format>NTFS</Format>
+                            <Label>Windows</Label>
+                            <Order>1</Order>
+                            <PartitionID>1</PartitionID>
+                        </ModifyPartition>
+                    </ModifyPartitions>
+                    <DiskID>0</DiskID>
+                    <WillWipeDisk>true</WillWipeDisk>
+                </Disk>
+                <WillShowUI>OnError</WillShowUI>
+            </DiskConfiguration>
+            <ImageInstall>
+                <OSImage>
+                    <InstallTo>
+                        <DiskID>0</DiskID>
+                        <PartitionID>1</PartitionID>
+                    </InstallTo>
+                    <WillShowUI>OnError</WillShowUI>
+                </OSImage>
+            </ImageInstall>
+        </component>
+    </settings>
+
+    <!-- 2. Specialize Phase: Generalize & Drivers -->    <settings pass="specialize">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <ComputerName>*</ComputerName> <!-- Randomizes Hostname -->
             <CopyProfile>false</CopyProfile> <!-- Critical: Saves your Audit Mode tweaks -->
-            <TimeZone>UTC</TimeZone>
+            <TimeZone>Eastern Standard Time</TimeZone>
+        </component>
+        <component name="Microsoft-Windows-UnattendedJoin" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Workgroup>INCIDIUM</Workgroup>
         </component>
         <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RunSynchronous>
@@ -44,12 +82,20 @@
                             <PlainText>true</PlainText>
                         </Password>
                         <Description>Digital Signage Administrator</Description>
-                        <DisplayName>ds</DisplayName>
+                        <DisplayName>incidium</DisplayName>
                         <Group>Administrators</Group>
-                        <Name>ds</Name>
+                        <Name>incidium</Name>
                     </LocalAccount>
                 </LocalAccounts>
             </UserAccounts>
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>powershell.exe -ExecutionPolicy Bypass -File C:\AutomationKit\post-os-install.ps1</CommandLine>
+                    <Description>Run Post-OS Installation Script</Description>
+                    <Order>1</Order>
+                    <RequiresInput>false</RequiresInput>
+                </SynchronousCommand>
+            </FirstLogonCommands>
         </component>
         <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <InputLocale>0409:00000409</InputLocale>

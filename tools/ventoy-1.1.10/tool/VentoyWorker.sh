@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . ./tool/ventoy_lib.sh
+export VENTOY_DIR="${OLDDIR}"
 
 print_usage() {
 
@@ -314,16 +315,16 @@ if [ "$MODE" = "install" -a -z "$NONDESTRUCTIVE" ]; then
     wait_and_create_part ${PART1} ${PART2}    
     if [ -b ${PART1} ]; then
         vtinfo "Format partition 1 ${PART1} ..."
-        mkexfatfs -n "$VTNEW_LABEL" -s $cluster_sectors ${PART1}
+        "${VENTOY_DIR}/tool/${TOOLDIR}/"${VENTOY_DIR}/tool/${TOOLDIR}/mkexfatfs"" -n "$VTNEW_LABEL" -s $cluster_sectors "${PART1}"
         if [ $? -ne 0 ]; then
-            echo "mkexfatfs failed, now retry..."
-            mkexfatfs -n "$VTNEW_LABEL" -s $cluster_sectors ${PART1}
+            echo "/home/m1ck5k1/dev/windows-automation-toolkit/ventoy-1.1.10/tool/x86_64/"${VENTOY_DIR}/tool/${TOOLDIR}/"${VENTOY_DIR}/tool/${TOOLDIR}/mkexfatfs"" failed, now retry..."
+            "${VENTOY_DIR}/tool/${TOOLDIR}/"${VENTOY_DIR}/tool/${TOOLDIR}/mkexfatfs"" -n "$VTNEW_LABEL" -s $cluster_sectors "${PART1}"
             if [ $? -ne 0 ]; then
-                echo "######### mkexfatfs failed, exit ########"
+                echo "######### /home/m1ck5k1/dev/windows-automation-toolkit/ventoy-1.1.10/tool/x86_64/"${VENTOY_DIR}/tool/${TOOLDIR}/"${VENTOY_DIR}/tool/${TOOLDIR}/mkexfatfs"" failed, exit ########"
                 exit 1
             fi
         else
-            echo "mkexfatfs success"
+            echo "/home/m1ck5k1/dev/windows-automation-toolkit/ventoy-1.1.10/tool/x86_64/"${VENTOY_DIR}/tool/${TOOLDIR}/"${VENTOY_DIR}/tool/${TOOLDIR}/mkexfatfs"" success"
         fi        
     else
         vterr "${PART1} NOT exist"
@@ -363,7 +364,7 @@ if [ "$MODE" = "install" -a -z "$NONDESTRUCTIVE" ]; then
     if [ "$SECUREBOOT" != "YES" ]; then 
         sleep 2
         check_umount_disk "$DISK"  
-        vtoycli partresize -s $DISK $part2_start_sector
+        "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -s $DISK $part2_start_sector
     fi
 
     echo ""
@@ -386,7 +387,7 @@ elif [ "$MODE" = "install" -a -n "$NONDESTRUCTIVE" ]; then
     disk_sector_num=$(cat /sys/block/${DISK#/dev/}/size)
     disk_size_gb=$(expr $disk_sector_num / 2097152)
 
-    if vtoycli partresize -t $DISK; then
+    if "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -t $DISK; then
         OldStyle="GPT"
     else
         OldStyle="MBR"
@@ -428,7 +429,7 @@ elif [ "$MODE" = "install" -a -n "$NONDESTRUCTIVE" ]; then
 
     #check partition layout
     echo "check partition layout ..."
-    vtoycli partresize -c $DISK
+    "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -c $DISK
     vtRet=$?
     if [ $vtRet -eq 0 ]; then
         exit 1
@@ -520,11 +521,11 @@ elif [ "$MODE" = "install" -a -n "$NONDESTRUCTIVE" ]; then
     
     vtinfo "esp partition processing ..."
     if [ "$SECUREBOOT" != "YES" ]; then
-        vtoycli partresize -s $DISK $part2_start_sector
+        "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -s $DISK $part2_start_sector
     fi
 
     vtinfo "update partition table $DISK $part2_start_sector ..."
-    vtoycli partresize -p $DISK $part2_start_sector
+    "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -p $DISK $part2_start_sector
     if [ $? -eq 0 ]; then
         sync
         echo ""
@@ -623,13 +624,13 @@ else
     if [ "$SECUREBOOT" != "YES" ]; then
         sleep 2
         check_umount_disk "$DISK"
-        vtoycli partresize -s $DISK $part2_start
+        "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" partresize -s $DISK $part2_start
     fi
 
     
     if [ "$PART1_TYPE" = "EE" ]; then    
         vtinfo "update esp partition attribute"
-        vtoycli gpt -f $DISK
+        "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" gpt -f $DISK
         sync
     fi
 

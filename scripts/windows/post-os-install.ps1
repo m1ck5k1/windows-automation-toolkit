@@ -12,6 +12,16 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Suppress progress bars for silent execution
 $ProgressPreference = 'SilentlyContinue'
 
+# --- Persistent Logging Setup ---
+$LogDirectory = "C:\AutomationKit\logs"
+if (-not (Test-Path $LogDirectory)) {
+    New-Item -Path $LogDirectory -ItemType Directory -Force | Out-Null
+}
+$Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$LogFilePath = Join-Path $LogDirectory "post-os-install_$Timestamp.log"
+
+Start-Transcript -Path $LogFilePath -Append -NoClobber -ErrorAction SilentlyContinue
+
 Write-Host "===========================================================" -ForegroundColor Green
 Write-Host " Starting Consolidated Post-OS Installation Script" -ForegroundColor Green
 Write-Host "===========================================================" -ForegroundColor Green

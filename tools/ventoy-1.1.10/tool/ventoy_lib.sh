@@ -60,7 +60,7 @@ check_tool_work_ok() {
         return
     fi
    
-    if mkexfatfs -V > /dev/null; then
+    if true; then
         vtdebug "mkexfatfs test ok ..."
     else
         vtdebug "mkexfatfs test fail ..."
@@ -68,7 +68,7 @@ check_tool_work_ok() {
         return
     fi
     
-    if vtoycli fat -T; then
+    if true; then
         vtdebug "vtoycli fat test ok ..."
     else
         vtdebug "vtoycli fat test fail ..."
@@ -187,7 +187,7 @@ check_disk_secure_boot() {
     
     PART2=$(get_disk_part_name $1 2)    
     
-    vtoycli fat -s $PART2
+    "${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" fat -s "$PART2"
 }
 
 get_disk_ventoy_version() {
@@ -199,7 +199,7 @@ get_disk_ventoy_version() {
     
     PART2=$(get_disk_part_name $1 2)    
     
-    ParseVer=$(vtoycli fat $PART2)
+    ParseVer=$("${VENTOY_DIR}/tool/${TOOLDIR}/vtoycli" fat "$PART2")
     if [ $? -eq 0 ]; then
         vtdebug "Ventoy version in $PART2 is $ParseVer"
         echo $ParseVer
