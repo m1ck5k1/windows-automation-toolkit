@@ -51,7 +51,6 @@ sudo parted -s ${TARGET_DISK} mklabel gpt
 # Create EFI System Partition (ESP) - 500MiB, FAT32
 sudo parted -s ${TARGET_DISK} mkpart primary fat32 0% 500MiB
 sudo parted -s ${TARGET_DISK} set 1 esp on
-sudo mkfs.fat -F 32 -n "BOOT_EFI" "${EFI_PARTITION}"
 
 # Create Windows Partition - remaining space, NTFS
 sudo parted -s ${TARGET_DISK} mkpart primary ntfs 500MiB 100%
@@ -60,5 +59,6 @@ sudo parted -s ${TARGET_DISK} set 2 msftdata on # Flag for Windows data partitio
 echo "Waiting for partition changes to propagate..."
 sudo partprobe ${TARGET_DISK}
 sleep 5 # Give the kernel time to recognize new partitions
+sudo mkfs.fat -F 32 -n "BOOT_EFI" "${EFI_PARTITION}"
 
 echo "Successfully created GPT partitions on ${TARGET_DISK}."

@@ -17,6 +17,9 @@ Thumbs.db
 target/
 build/
 dist/
+.gemini/
+SnakeSpeareV6_Installer.exe
+*.7z
 
 # Editor/IDE specific files
 .idea/

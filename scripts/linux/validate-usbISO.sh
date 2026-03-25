@@ -191,7 +191,7 @@ echo "----------------------------------------------------" >&2
 
 # 1. Select USB Drive
 echo "----------------------------------------------------" >&2
-echo "  Step 1/5: Selecting USB Device" >&2
+echo "  Step 1/6: Selecting USB Device" >&2
 echo "----------------------------------------------------" >&2
 echo "Scanning for connected USB devices..." >&2
 declare -a USB_DEVICES_PATHS
@@ -269,6 +269,16 @@ sudo "${PROJECT_ROOT}/scripts/linux/unmount_target_disk.sh" "${USB_DEVICE_PATH}"
     exit 1
 }
 
+# Mandatory manual unplug/replug step
+echo "----------------------------------------------------" >&2
+echo "  Step 2/6: Manual USB Device Intervention Required" >&2
+echo "----------------------------------------------------" >&2
+if ! confirm_action "Please unplug and then replug the USB device (${USB_DEVICE_PATH}) NOW. Confirm when done (y/n): " >&2; then
+    echo "Error: Manual intervention cancelled. Exiting." >&2
+    exit 1
+fi
+echo "USB device unplug/replug confirmed. Continuing..." >&2
+
 echo "Proceeding to validate the USB device $USB_DEVICE_PATH. This will attempt to mount partitions." >&2
 if ! confirm_action; then
     echo "Action cancelled. Exiting." >&2
@@ -277,7 +287,7 @@ fi
 
 # 2. Identify Partitions
 echo "----------------------------------------------------" >&2
-echo "  Step 2/5: Identifying Partitions" >&2
+echo "  Step 3/6: Identifying Partitions" >&2
 echo "----------------------------------------------------" >&2
 EFI_PARTITION=""
 WIN_PARTITION=""
@@ -310,12 +320,12 @@ fi
 
 # 3. Mount Partitions for Validation
 echo "----------------------------------------------------" >&2
-echo "  Step 3/5: Mounting Partitions for Validation" >&2
+echo "  Step 4/6: Mounting Partitions for Validation" >&2
 echo "----------------------------------------------------" >&2
 mount_partitions_and_iso_for_validation "${EFI_PARTITION}" "${WIN_PARTITION}"
 
 echo "----------------------------------------------------" >&2
-echo "  Step 4/5: Starting Validation Checks" >&2
+echo "  Step 5/6: Starting Validation Checks" >&2
 echo "----------------------------------------------------" >&2
 VALIDATION_FAILURES=0
 
@@ -376,7 +386,7 @@ perform_check "file" "$WIN_PART_MOUNT_POINT/AutomationKit/tools/incidium-remote-
 
 echo "" >&2
 echo "----------------------------------------------------" >&2
-echo "  Step 5/5: Validation Summary" >&2
+echo "  Step 6/6: Validation Summary" >&2
 echo "----------------------------------------------------" >&2
 if [ "$VALIDATION_FAILURES" -eq 0 ]; then
     echo "[VALIDATION SUCCESS] All checks passed." >&2

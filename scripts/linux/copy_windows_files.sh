@@ -132,17 +132,37 @@ fi
 # Copy unattend.xml
 # The pre-check for UNATTEND_XML_SOURCE is done at the beginning of the script
 echo "Copying unattend.xml to Windows partition..."
-sudo mkdir -p "${WIN_PART_MOUNT_POINT}/Windows/Panther"
-sudo cp "${UNATTEND_XML_SOURCE}" "${WIN_PART_MOUNT_POINT}/Windows/Panther/unattend.xml"
+sudo cp "${UNATTEND_XML_SOURCE}" "${WIN_PART_MOUNT_POINT}/autounattend.xml"
 
-echo "Copying AutomationKit to Windows partition..."
+# Copy scripts/ folder
+echo "Copying scripts/ folder to Windows partition..."
+sudo rsync -a --info=progress2 "${PROJECT_ROOT}/scripts/" "${WIN_PART_MOUNT_POINT}/Scripts/"
+if [ $? -ne 0 ]; then
+    echo "Error: rsync failed to copy scripts/ to ${WIN_PART_MOUNT_POINT}/Scripts/." >&2
+    exit 1
+fi
+
+echo "Copying AutomationKit (excluding SnakeSpeareV6) to Windows partition..."
 sudo mkdir -p "${WIN_PART_MOUNT_POINT}/${AUTOMATION_KIT_DIR_SOURCE##*/}"
-sudo rsync -a --info=progress2 "${AUTOMATION_KIT_DIR_SOURCE}/" "${WIN_PART_MOUNT_POINT}/${AUTOMATION_KIT_DIR_SOURCE##*/}/" --exclude='SnakeSpeareV6/' --exclude='scripts/windows/'
+sudo rsync -a --info=progress2 "${AUTOMATION_KIT_DIR_SOURCE}/" "${WIN_PART_MOUNT_POINT}/${AUTOMATION_KIT_DIR_SOURCE##*/}/" --exclude='SnakeSpeareV6/'
 if [ $? -ne 0 ]; then
     echo "Error: rsync failed to copy AutomationKit to ${WIN_PART_MOUNT_POINT}/${AUTOMATION_KIT_DIR_SOURCE##*/}/." >&2
     exit 1
 fi
-echo "Warning: Problematic components (SnakeSpeareV6 and Windows scripts) were excluded from AutomationKit due to persistent I/O errors. They will need to be handled separately." >&2
+
+echo "Copying SnakeSpeareV6 self-extracting installer to Windows partition..."
+SFX_INSTALLER_PATH="${PROJECT_ROOT}/.gemini/tmp/sfx_build/SnakeSpeareV6_Installer.exe"
+if [ ! -f "${SFX_INSTALLER_PATH}" ]; then
+    echo "Error: SnakeSpeareV6 SFX installer not found at ${SFX_INSTALLER_PATH}. Please ensure it is created before running this script." >&2
+    exit 1
+fi
+sudo cp "${SFX_INSTALLER_PATH}" "${WIN_PART_MOUNT_POINT}/${AUTOMATION_KIT_DIR_SOURCE##*/}/SnakeSpeareV6_Installer.exe"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy SnakeSpeareV6 SFX installer to USB." >&2
+    exit 1
+fi
+
+echo "Warning: The original SnakeSpeareV6 directory was installed via SFX installer. Ensure it is executed on Windows." >&2
 
 echo "Successfully created Windows 10 UEFI bootable USB on ${TARGET_DISK}!"
 echo "Please safely eject the USB drive."

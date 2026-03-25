@@ -10,17 +10,22 @@ WINDOWS_ISO="${PROJECT_ROOT}/win10_x64.iso"
 # Global Mount Points
 EFI_PART_MOUNT_POINT="${PROJECT_ROOT}/.gemini/tmp/usb_efi_validate_mount"
 WIN_PART_MOUNT_POINT="${PROJECT_ROOT}/.gemini/tmp/usb_win_validate_mount"
-ISO_MOUNT_POINT="${PROJECT_ROOT}/.gemini/tmp/windows-automation-toolkit"
+ISO_MOUNT_POINT="${PROJECT_ROOT}/.gemini/tmp/iso_mount_dir"
 TARGET_DISK=""
+
+SFX_BUILD_DIR="${PROJECT_ROOT}/.gemini/tmp/sfx_build"
+SFX_CONFIG_FILE="${SFX_BUILD_DIR}/sfx_config.txt"
+SFX_INSTALLER_PATH="${SFX_BUILD_DIR}/SnakeSpeareV6_Installer.exe"
+
 
 # Function to mount all necessary partitions and the ISO
 mount_all_partitions_and_iso() {
     echo "Mounting all partitions and ISO..."
 
     # Create mount directories
-    sudo mkdir -p "${EFI_PART_MOUNT_POINT}" || { echo "Error: Failed to create EFI mount point."; exit 1; }
-    sudo mkdir -p "${WIN_PART_MOUNT_POINT}" || { echo "Error: Failed to create Windows mount point."; exit 1; }
-    sudo mkdir -p "${ISO_MOUNT_POINT}" || { echo "Error: Failed to create ISO mount point."; exit 1; }
+    sudo mkdir -p "${EFI_PART_MOUNT_POINT}" || { echo "Error: Failed to create EFI mount point." >&2; exit 1; }
+    sudo mkdir -p "${WIN_PART_MOUNT_POINT}" || { echo "Error: Failed to create Windows mount point." >&2; exit 1; }
+    sudo mkdir -p "${ISO_MOUNT_POINT}" || { echo "Error: Failed to create ISO mount point." >&2; exit 1; }
 
     # Determine partition paths based on TARGET_DISK
     # Assuming standard partition numbering: 1 for EFI, 2 for Windows
@@ -173,7 +178,7 @@ check_orchestrator_dependencies
 
 # 1. Select USB device
 echo "----------------------------------------------------"
-echo "  Step 1/6: Selecting USB Device"
+echo "  Step 1/8: Selecting USB Device"
 echo "----------------------------------------------------"
 echo "Please interact with the prompts below to select your target USB drive."
 DEVICE_INFO=$(sudo "${PROJECT_ROOT}/scripts/linux/select_usb_device.sh")
@@ -276,10 +281,23 @@ if [ $? -ne 0 ]; then
 fi
 echo "All partitions and ISO mounted successfully."
 
-# 8. Copy Windows and AutomationKit files
-echo "----------------------------------------------------"
-echo "  Step 8/8: Copying Windows and AutomationKit Files"
-echo "----------------------------------------------------"
+
+# 8. Creating SnakeSpeareV6 SFX Installer
+echo "----------------------------------------------------" >&2
+echo "  Step 8/9: Creating SnakeSpeareV6 SFX Installer" >&2
+echo "----------------------------------------------------" >&2
+
+sudo mkdir -p "${SFX_BUILD_DIR}" || { echo "Error: Failed to create SFX temporary directory." >&2; exit 1; }
+echo ";!@Install@!;\nInstallPath=\"C:\\SnakeSpeareV6\"\n;!@InstallEnd@!;" > "${SFX_CONFIG_FILE}" || { echo "Error: Failed to create SFX config file." >&2; exit 1; }
+pushd "${PROJECT_ROOT}/AutomationKit/SnakeSpeareV6/" || { echo "Error: Failed to change to SnakeSpeareV6 directory." >&2; exit 1; }
+7z a -sfx"${SFX_CONFIG_FILE}" -mx=9 "${SFX_INSTALLER_PATH}" ./* || { popd >/dev/null; echo "Error: Failed to create SnakeSpeareV6 SFX installer." >&2; exit 1; }
+popd >/dev/null || { echo "Error: Failed to return from SnakeSpeareV6 directory." >&2; exit 1; }
+echo "SnakeSpeareV6 SFX installer created successfully." >&2
+
+# 9. Copy Windows and AutomationKit files
+echo "----------------------------------------------------" >&2
+echo "  Step 9/9: Copying Windows and AutomationKit Files" >&2
+echo "----------------------------------------------------" >&2
 sudo "${PROJECT_ROOT}/scripts/linux/copy_windows_files.sh" "${PROJECT_ROOT}" "${TARGET_DISK}" "${EFI_PART_MOUNT_POINT}" "${WIN_PART_MOUNT_POINT}" "${ISO_MOUNT_POINT}"
 if [ $? -ne 0 ]; then
     echo "Error: Failed to copy Windows and AutomationKit files to ${TARGET_DISK}. Exiting." >&2
