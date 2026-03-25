@@ -122,6 +122,12 @@ cleanup_all_mounts() {
     echo "Cleanup complete."
 }
 
+# Function to confirm manual actions
+confirm_action() {
+    read -p "$1" response
+    [[ "$response" =~ ^[Yy]$ ]]
+}
+
 # Function to check for necessary dependencies (for this orchestrator script)
 check_orchestrator_dependencies() {
     echo "Checking orchestrator dependencies..."
@@ -196,7 +202,7 @@ WINDOWS_PARTITION="${TARGET_DISK}2"
 
 # 2. Unmount target disk
 echo "----------------------------------------------------"
-echo "  Step 2/7: Unmounting Target Disk"
+echo "  Step 2/8: Unmounting Target Disk"
 echo "----------------------------------------------------"
 sudo "${PROJECT_ROOT}/scripts/linux/unmount_target_disk.sh" "${TARGET_DISK}"
 if [ $? -ne 0 ]; then
@@ -205,9 +211,29 @@ if [ $? -ne 0 ]; then
 fi
 echo "Target disk unmounted successfully."
 
-# 3. Create GPT partitions
+# 3. Manual USB Reconnection
 echo "----------------------------------------------------"
-echo "  Step 3/7: Creating GPT Partitions"
+echo "  Step 3/8: Manual USB Reconnection"
+echo "----------------------------------------------------"
+# --- MANUAL ACTION REQUIRED ---
+echo "" >&2
+echo "================================================================================" >&2
+echo "!!! MANUAL INTERVENTION REQUIRED !!!" >&2
+echo "Please PHYSICALLY UNPLUG the USB device (${TARGET_DISK}) from your computer." >&2
+echo "Then, REPLUG the USB device (${TARGET_DISK}) into a USB port." >&2
+echo "This step is crucial to resolve persistent kernel-level device busy issues." >&2
+echo "================================================================================" >&2
+echo "" >&2
+
+if ! confirm_action "Please unplug and then replug the USB device (${TARGET_DISK}) NOW. Confirm when done (y/n): " >&2; then
+    echo "Error: Manual intervention cancelled. Exiting." >&2
+    exit 1
+fi
+echo "USB device reconnected and confirmed."
+
+# 4. Create GPT partitions
+echo "----------------------------------------------------"
+echo "  Step 4/8: Creating GPT Partitions"
 echo "----------------------------------------------------"
 sudo "${PROJECT_ROOT}/scripts/linux/create_gpt_partitions.sh" "${TARGET_DISK}"
 if [ $? -ne 0 ]; then
@@ -216,9 +242,9 @@ if [ $? -ne 0 ]; then
 fi
 echo "GPT partitions created successfully."
 
-# 4. Format partitions
+# 5. Format partitions
 echo "----------------------------------------------------"
-echo "  Step 4/7: Formatting Partitions"
+echo "  Step 5/8: Formatting Partitions"
 echo "----------------------------------------------------"
 sudo "${PROJECT_ROOT}/scripts/linux/format_partitions.sh" "${TARGET_DISK}"
 if [ $? -ne 0 ]; then
@@ -227,9 +253,9 @@ if [ $? -ne 0 ]; then
 fi
 echo "Partitions formatted successfully."
 
-# 5. Run ntfsfix on the Windows partition
+# 6. Run ntfsfix on the Windows partition
 echo "----------------------------------------------------"
-echo "  Step 5/7: Running ntfsfix on Windows Partition"
+echo "  Step 6/8: Running ntfsfix on Windows Partition"
 echo "----------------------------------------------------"
 echo "Running ntfsfix on ${WINDOWS_PARTITION}..."
 sudo ntfsfix -d "${WINDOWS_PARTITION}"
@@ -239,9 +265,9 @@ if [ $? -ne 0 ]; then
 fi
 echo "ntfsfix completed successfully."
 
-# 6. Mount partitions and ISO
+# 7. Mount partitions and ISO
 echo "----------------------------------------------------"
-echo "  Step 6/7: Mounting Partitions and ISO"
+echo "  Step 7/8: Mounting Partitions and ISO"
 echo "----------------------------------------------------"
 mount_all_partitions_and_iso
 if [ $? -ne 0 ]; then
@@ -250,9 +276,9 @@ if [ $? -ne 0 ]; then
 fi
 echo "All partitions and ISO mounted successfully."
 
-# 7. Copy Windows and AutomationKit files
+# 8. Copy Windows and AutomationKit files
 echo "----------------------------------------------------"
-echo "  Step 7/7: Copying Windows and AutomationKit Files"
+echo "  Step 8/8: Copying Windows and AutomationKit Files"
 echo "----------------------------------------------------"
 sudo "${PROJECT_ROOT}/scripts/linux/copy_windows_files.sh" "${PROJECT_ROOT}" "${TARGET_DISK}" "${EFI_PART_MOUNT_POINT}" "${WIN_PART_MOUNT_POINT}" "${ISO_MOUNT_POINT}"
 if [ $? -ne 0 ]; then

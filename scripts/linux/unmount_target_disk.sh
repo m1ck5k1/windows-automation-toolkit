@@ -82,7 +82,8 @@ fi
 
 echo "Unmounting any existing partitions on ${TARGET_DISK}..."
 # Get a list of all partitions (e.g., sda1, sda2) on the target disk
-PARTITIONS_TO_UNMOUNT=$(lsblk -lno NAME "${TARGET_DISK}" | grep -v "${TARGET_DISK##*/}" | grep -E '[0-9]$' || true)
+PARTITIONS_TO_UNMOUNT=$(sudo lsblk -lno NAME,MOUNTPOINT "${TARGET_DISK}" | awk '$2 != "" {print $1}' | grep -E '[0-9]$' || true)
+
 
 if [ -n "${PARTITIONS_TO_UNMOUNT}" ]; then
     echo "Found partitions to unmount on ${TARGET_DISK}: ${PARTITIONS_TO_UNMOUNT}"
