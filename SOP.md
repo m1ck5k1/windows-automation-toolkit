@@ -6,7 +6,7 @@
 **Goal:** Take a bare metal machine and make it SSH-accessible.
 
 1.  **Boot from USB:**
-    *   Insert **Ventoy USB**.
+    *   Insert the prepared USB drive (created using `scripts/linux/orchestrate_usb_creation.sh`).
     *   Boot into **Windows 10 / 11 ISO**.
     *   Install Windows (Create Offline Account if prompted, or bypass network).
 

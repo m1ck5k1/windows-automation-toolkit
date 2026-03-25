@@ -18,7 +18,7 @@ State Sync: Every session/task must begin with a confirmation of the current Git
 The `generalist` sub-agent is invaluable for tasks that are turn-intensive, involve extensive data processing, or require speculative investigations.
 
 **Specific Use-Cases:**
-*   **Complex Debugging:** Analyzing verbose logs, identifying root causes across multiple files, and iteratively testing fixes for script failures (e.g., the recent USB creation script debugging).
+*   **Complex Debugging:** Analyzing verbose logs, identifying root causes across multiple files, and iteratively testing fixes for script failures (e.g., the recent USB creation script debugging, which involved extensive troubleshooting of partition management, `rsync` errors, and `ntfsfix` integration for the modular UEFI Windows USB creation workflow).
 *   **Batch Operations:** Performing refactoring or error fixing across numerous files (e.g., updating common variables, migrating syntax).
 *   **Speculative Investigations:** Exploring unknown parts of the codebase, identifying dependencies, or understanding complex architectural patterns without direct guidance.
 
@@ -27,7 +27,8 @@ The `generalist` sub-agent is invaluable for tasks that are turn-intensive, invo
 Based on the `windows-automation-toolkit`'s current structure and goals, the following specialized sub-agents could significantly enhance future development:
 
 *   **PowerShell Agent:** Focused on developing, debugging, and maintaining the `scripts/windows/*.ps1` files. This agent would be expert in PowerShell syntax, best practices, and Windows-specific automation tasks.
-*   **Documentation Agent:** Dedicated to maintaining and generating project documentation (`README.md`, `SOP.md`, `docs/`). It would ensure consistency, accuracy, and adherence to documentation standards.
+*   **Documentation Agent:** Dedicated to maintaining and generating project documentation (`README.md`, `SOP.md`, `docs/`). This agent is currently in use to update existing documentation, ensuring consistency, accuracy, and adherence to documentation standards for the new modular USB workflow.
+
 *   **Driver Management Agent:** Specializes in identifying, sourcing, downloading, and integrating OEM-specific drivers into the `drivers/` directory, ensuring they are correctly packaged and deployed.
 
 ### Building on NixOS

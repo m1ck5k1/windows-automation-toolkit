@@ -90,50 +90,50 @@ To fully support Windows users for USB creation, new PowerShell scripts (`script
 
 ---
 
-## 4. USB Drive Creation
+## 4. USB Drive Creation - Modular UEFI Windows USB Workflow
 
-This section details the methods for preparing bootable Windows 10 USB drives.
+This section outlines the advanced, modular workflow for preparing bootable UEFI Windows USB drives using `orchestrate_usb_creation.sh`. This workflow ensures robust partition management, file copying, and unmounting, specifically tailored for Windows 10/11 installations.
 
 ### Requirements
-*   A USB drive (58.6GB or larger recommended, identical size/make for batch processing).
-*   **For Linux hosts:** `lsblk`, `sudo`, `rsync`, `parted`, `mkfs.ntfs` (from `ntfs-3g` package), and `exfatprogs` installed.
+*   A USB drive (58.6GB or larger recommended for Windows 10/11 ISOs).
+*   **For Linux hosts:** `lsblk`, `sudo`, `rsync`, `parted`, `mkfs.ntfs` (from `ntfs-3g` package), `exfatprogs`, and `ntfsfix` installed.
 
-### 4.1. Ventoy USB Creation
+### 4.1. The Modular USB Creation Workflow (`orchestrate_usb_creation.sh`)
 
-This method uses Ventoy to create a multi-boot USB drive, allowing you to place multiple ISOs on a single drive without re-flashing.
+The `scripts/linux/orchestrate_usb_creation.sh` script is the central entry point for creating UEFI-bootable Windows USB drives. It integrates several specialized scripts to perform each step of the process reliably.
 
-**Location:** `scripts/linux/create_ventoy_usb.sh`
+**Workflow Components:**
+*   `select_usb_device.sh`: Guides the user to safely select the target USB device.
+*   `prepare_usb_partitions.sh`: Unmounts existing partitions on the selected USB device.
+*   `create_gpt_partitions.sh`: Creates the necessary GPT partition table and EFI/Windows partitions.
+*   `format_partitions.sh`: Formats the partitions (FAT32 for EFI, NTFS for Windows) and applies `ntfsfix` for Windows partitions to ensure filesystem integrity.
+*   `copy_windows_files.sh`: Mounts the Windows ISO and copies its contents to the Windows partition.
+*   `copy_files_to_usb.sh`: Copies project-specific `AutomationKit` files and `unattend.xml` to the USB.
+*   `unmount_target_disk.sh`: Implements a robust strategy to unmount all partitions associated with the target USB device, crucial for preventing data corruption and ensuring clean ejection.
+
+**Key Features and Improvements:**
+
+*   **Modular Architecture:** Each critical step is encapsulated in its own script, enhancing maintainability, testability, and clarity.
+*   **Robust Unmounting Strategy:** `unmount_target_disk.sh` provides a comprehensive approach to unmounting, addressing common issues with busy devices.
+*   **Centralized Mount Management:** `orchestrate_usb_creation.sh` manages all mounting and unmounting operations for the USB partitions, ensuring consistency and proper cleanup.
+*   **Correct `unattend.xml` Pathing:** The `copy_files_to_usb.sh` component correctly places `unattend.xml` in the root of the Windows partition, ensuring it is detected by the Windows installer.
+*   **Successful EFI FAT32 Formatting:** The EFI system partition is correctly formatted as FAT32 and mounted, ensuring UEFI boot compatibility.
+*   **`ntfsfix` Integration:** `ntfsfix` is applied to the newly formatted NTFS partition to proactively resolve potential filesystem inconsistencies that can arise during creation, enhancing reliability.
+
+**Known Limitations / Exclusions:**
+
+*   **`AutomationKit/SnakeSpeareV6` and `AutomationKit/windows` Exclusion:** Due to persistent I/O errors and compatibility challenges during large-scale `rsync` operations, the `AutomationKit/SnakeSpeareV6` and `AutomationKit/windows` directories are *intentionally excluded* from the automated USB creation process. These directories contain applications and Windows-specific scripts that often lead to silent failures or incomplete copies. They require separate, manual handling (e.g., via network transfer post-OS installation or by individually copying specific files after the initial USB creation).
 
 **Usage:**
-1.  **Make the script executable:**
+1.  **Make `orchestrate_usb_creation.sh` executable:**
     ```bash
-    chmod +x /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/create_ventoy_usb.sh
+    chmod +x /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/orchestrate_usb_creation.sh
     ```
 2.  **Run the script:**
-    ```
-    sudo /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/create_ventoy_usb.sh /dev/sdX
-    ```
-    Replace `/dev/sdX` with the actual device path of your USB drive (e.g., `/dev/sdb`, `/dev/sdc`). The script includes a confirmation prompt to prevent accidental data loss. This script copies `unattend.xml` to **both the root of the Ventoy partition and inside the `AutomationKit` directory** for seamless Windows Setup integration and post-installation script access.
-
-**Ventoy Script Patches:**
-During the development of this toolkit, specific modifications were made to the bundled Ventoy scripts (`tools/ventoy-1.1.10/tool/ventoy_lib.sh` and `tools/ventoy-1.1.10/tool/VentoyWorker.sh`) to resolve compatibility issues with `mkexfatfs` and `vtoycli` commands. These patches are now integrated into the `tools/ventoy-1.1.10` directory within this project and are crucial for the `scripts/linux/create_ventoy_usb.sh` script to function correctly.
-
-### 4.2. Non-Ventoy Windows 10 USB Creation (for `unattend.xml` debugging)
-
-This method creates a standard bootable Windows 10 USB drive by directly copying the ISO contents. This is generally more reliable for `unattend.xml` detection and is recommended for debugging `unattend.xml` issues, but it does **not** offer multi-ISO boot capabilities.
-
-**Location:** `scripts/linux/create_non_ventoy_usb.sh`
-
-**Usage:**
-1.  **Make the script executable:**
     ```bash
-    chmod +x /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/create_non_ventoy_usb.sh
+    sudo /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/orchestrate_usb_creation.sh /path/to/win10_x64.iso
     ```
-2.  **Run the script:**
-    ```
-    sudo /home/m1ck5k1/dev/windows-automation-toolkit/scripts/linux/create_non_ventoy_usb.sh /dev/sdX
-    ```
-    Replace `/dev/sdX` with the actual device path of your USB drive (e.g., `/dev/sdb`, `/dev/sdc`). The script includes a confirmation prompt to prevent accidental data loss. This script copies the `win10_x64.iso` contents and `unattend.xml` directly to the root of the USB drive.
+    The script will guide you through selecting the USB device and creating the bootable drive. Replace `/path/to/win10_x64.iso` with the actual path to your Windows 10/11 ISO file.
 
 ---
 
@@ -171,26 +171,26 @@ This PowerShell script is executed via `FirstLogonCommands` in `unattend.xml` af
 
 ## 7. Usage Guide
 
-To use this toolkit for automated Windows 10 deployment:
+To use this toolkit for automated Windows 10/11 deployment:
 
 1.  **Prepare a Bootable USB Drive:**
     *   Plug in a blank USB drive to your Linux machine.
-    *   Identify its device path (e.g., `/dev/sdb`) using `lsblk`.
-    *   Choose your desired method and run the corresponding script:
-        *   For Ventoy: `sudo scripts/linux/create_ventoy_usb.sh /dev/sdX`
-        *   For Non-Ventoy: `sudo scripts/linux/create_non_ventoy_usb.sh /dev/sdX`
-    *   Repeat for all desired USB drives.
-2.  **Add Drivers (Recommended):**
-    *   Place specific drivers for your target hardware into the `drivers/` directory, organized by manufacturer (e.g., `drivers/Lenovo/`).
-    *   Ensure your chosen USB creation script (e.g., `scripts/linux/create_non_ventoy_usb.sh`) is updated to copy these `drivers/` folders into the `AutomationKit` on the USB (if not already implemented).
-    *   The `scripts/windows/setupcomplete.cmd` expects drivers to be available at `C:\DRIVERS\ManufacturerName`.
-3.  **Boot Target Machine from USB:**
+    *   Ensure your Windows 10/11 ISO is accessible.
+    *   Run the orchestration script, providing the path to your ISO:
+        ```bash
+        sudo scripts/linux/orchestrate_usb_creation.sh /path/to/your/windows.iso
+        ```
+    *   Follow the on-screen prompts to select the USB device and complete the creation process.
+
+2.  **Boot Target Machine from USB:**
     *   Insert the prepared USB drive into the target Windows machine.
-    *   Boot the machine from the USB drive (select the Windows ISO from the Ventoy menu if using a Ventoy USB).
-4.  **Initiate Windows 10 Installation:**
-    *   The `unattend.xml` file (if correctly detected) will automate the installation, including disk partitioning, language selection, and user creation.
-5.  **Post-OS Configuration:**
-    *   `scripts/windows/setupcomplete.cmd` will run automatically during Windows setup to copy the `AutomationKit` and set the computer name.
+    *   Boot the machine from the USB drive.
+
+3.  **Initiate Windows 10/11 Installation:**
+    *   The `unattend.xml` file (correctly detected at the root of the Windows partition) will automate the installation, including disk partitioning, language selection, and user creation.
+
+4.  **Post-OS Configuration:**
+    *   `scripts/windows/setupcomplete.cmd` will run automatically during Windows setup to copy the `AutomationKit` (excluding `SnakeSpeareV6` and `windows` subdirectories) and set the computer name.
     *   Upon first logon, `scripts/windows/post-os-install.ps1` will execute to perform further automated configurations.
 
 ---
